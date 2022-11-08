@@ -42,7 +42,7 @@ const videoSchema = new Schema<VideoType>({
       videoId: { type: String },
       title: {
         type: String,
-        maxlength: 30,
+        maxlength: 50,
       },
       name: {
         type: String,
@@ -103,6 +103,7 @@ const deleteAllWatchLater = WatchLater.deleteMany({ Ref: id }); //
     deleteAllHistories,
     deleteAllLikes,
     deleteAllVideos,
+    deleteAllWatchLater
   ]);
   return next();
 });

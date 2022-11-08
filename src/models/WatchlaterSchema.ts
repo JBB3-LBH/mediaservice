@@ -1,11 +1,11 @@
 import { model, ObjectId, Schema } from "mongoose";
 
-interface viewSchemaType {
+interface watchLaterSchemaType {
   userId: ObjectId;
   Ref: ObjectId;
 }
 
-const viewSchema = new Schema<viewSchemaType>(
+const watchLaterSchema = new Schema<watchLaterSchemaType>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -19,5 +19,5 @@ const viewSchema = new Schema<viewSchemaType>(
   }
 );
 
-const View = model<viewSchemaType>("watchlater", viewSchema);
-export default View;
+const Watchlater = model<watchLaterSchemaType>("watchlater", watchLaterSchema);
+export default Watchlater;

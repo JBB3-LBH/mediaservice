@@ -10,6 +10,7 @@ interface userType {
   Subscription: any[];
   profilePic: string;
   username: string;
+  channel: ObjectId;
   History:
     | {
         Ref: ObjectId;
@@ -59,6 +60,10 @@ const user = new Schema<userType>({
           id: { type: Schema.Types.ObjectId },
         },
       ],
+      channel: {
+        type: Schema.Types.ObjectId,
+        Ref: "channel",
+      },
     },
     { _id: false },
   ],

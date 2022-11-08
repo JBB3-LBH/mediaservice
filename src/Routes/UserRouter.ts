@@ -3,8 +3,8 @@ import { Router } from "express";
 const r = Router();
 
 r.get("/home");
-r.get("/search");
-r.get("/autoComplete");
+r.post("/search");
+r.post("/autoComplete");
 r.get("/trending");
 r.get("/recommended");
 r.get("/trending/:tag");

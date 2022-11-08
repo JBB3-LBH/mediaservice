@@ -7,7 +7,7 @@ import logg from "./Logs/Customlog";
 import { VideoRouter, ChannelRouter, CommentRouter } from "./Routes";
 
 dotenv.config();
-const PORT: number | string = process.env.PORT || 9980;
+const PORT: number | string = process.env.PORT || 9960;
 const app: Express = express();
 
 app.use(cors());

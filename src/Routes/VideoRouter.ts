@@ -2,15 +2,9 @@ import { Router } from "express";
 
 const r = Router();
 
-r.get('/home') 
-r.get('/search') 
-r.get('/trending') 
-r.get('/history') 
-r.get('/watchLater') 
-r.get('/liked') 
-r.get('/subscriptions')  
-r.get('/home') 
-r.get('/:videoId') 
- 
+r.get("/:videoId/main");
+r.get("/:videoId/allActivity");
+r.get("/:videoId/likes_N_Dislikes");
+r.get("/:videoId/views");
 
 export default r;

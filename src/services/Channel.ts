@@ -1,41 +1,155 @@
-//find video from search
-const Videos_For_One_Channel = async (searchParam: string, prevDoc: string) => {
+import logg from "../Logs/Customlog";
+import { Video, Channel } from "../models";
+import { ResultTypes } from "../types/main";
+import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
+import { ObjectId } from "mongodb";
+import dotenv from "dotenv";
+import { custom } from "./custom";
+dotenv.config();
+
+//function to get channel main data like name and all
+export const One_Channel_Info = async (channelId: string): Promise<ResultTypes> => {
   try {
-  } catch (e: any) {}
+    const channelData = await Channel.findOne({ _id: channelId });
+    if (channelData) {
+      //if the channel is in the db
+      if (channelData.channelPic) {
+        channelData.channelPic = getSignedUrl({
+          url: `https://d27i2oedcihbcx.cloudfront.net/${channelData.channelPic}`,
+          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
+          privateKey: custom!,
+          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
+        });
+      }
+      if (channelData.channelBanner) {
+        channelData.channelBanner = getSignedUrl({
+          url: `https://d27i2oedcihbcx.cloudfront.net/${channelData.channelBanner}`,
+          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
+          privateKey: custom!,
+          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
+        });
+      }
+      return { success: true, code: 200, data: channelData };
+    }
+    //if there is no channel
+    return { success: false, data: "", code: 404, error: "No channel found" };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: false, code: 404, error: "Something went wrong , try again later" };
+  }
+};
+//find video from search
+export const Find_Channels = async (searchParam: string, page: number) => {
+  try {
+    const Channels = await Channel.aggregate([
+      {
+        $search: {
+          index: "channelSearch",
+          text: {
+            query: `${searchParam}`,
+            path: "channelName",
+          },
+        },
+      },
+      { $limit: 30 },
+      { $skip: (page - 1) * 30 },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          channelName: 1,
+          channelPic: 1,
+        },
+      },
+    ]);
+    for (const channel of Channels) {
+      if (channel.channelPic) {
+        channel.channelPic = getSignedUrl({
+          url: `https://d27i2oedcihbcx.cloudfront.net/${channel.channelPic}`,
+          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
+          privateKey: custom!,
+          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
+        });
+      }
+    }
+    return { success: true, code: 200, data: Channels };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: true, code: 404, data: "", error: e.message };
+  }
 };
 
-//find video from search
-const One_Channel_Info = async (searchParam: string, prevDoc: string) => {
+//function to get channel data
+export const get_Channel_Activity = async (channelId: string): Promise<ResultTypes> => {
   try {
-  } catch (e: any) {}
+    const dislikes_count = await Video.aggregate([
+      { $match: { channelId: new ObjectId(channelId) } },
+      { $group: { _id: null, dislikes: { $sum: "$likes" }, Views: { $sum: "$views" } } },
+    ]); //get total likes
+
+    if (dislikes_count.length > 0) {
+      const { dislikes } = dislikes_count[0];
+      return {
+        success: true,
+        code: 200,
+        data: { dislikes },
+      };
+    }
+    //if there was no data for subsribers, meaning there was no channel at all
+    return {
+      success: false,
+      code: 404,
+      error: `No channel found`,
+      data: "",
+    };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return {
+      success: false,
+      code: 404,
+      error: e.message,
+      data: "",
+    };
+  }
 };
 
-//find video from search
-const One_Channel_Subs = async (searchParam: string, prevDoc: string) => {
+export const get_Channel_Subscribers = async (channelId: string): Promise<ResultTypes> => {
   try {
-  } catch (e: any) {}
+    const Subscribers = await Channel.findById(channelId, "Subscribers"); //get amount of subscribers
+    if (Subscribers) {
+      //if the channel is in the db
+      return { success: true, code: 200, data: Subscribers };
+    }
+    //if there is no channel
+    return { success: false, data: "", code: 404, error: "No channel found" };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: false, code: 404, error: "Something went wrong , try again later" };
+  }
 };
 
-//find video from search
-const One_Channel_likes_ND_dislike = async (searchParam: string, prevDoc: string) => {
+export const get_All_Creation = async (channelId: string): Promise<ResultTypes> => {
   try {
-  } catch (e: any) {}
-};
-
-//find video from search
-const One_Channel_Views = async (searchParam: string, prevDoc: string) => {
-  try {
-  } catch (e: any) {}
-};
-
-//find video from search
-const One_Channel_Data = async (searchParam: string, prevDoc: string) => {
-  try {
-  } catch (e: any) {}
-};
-
-//find video from search
-const Search_videos_in_one_channel = async (searchParam: string, prevDoc: string) => {
-  try {
-  } catch (e: any) {}
+    //findone
+    const videoData = await Video.find({ channelId }, "title coverPhoto published");
+    if (videoData) {
+      for (const video of videoData) {
+        if (video.coverPhoto) {
+          video.coverPhoto = getSignedUrl({
+            url: `https://d27i2oedcihbcx.cloudfront.net/${video.coverPhoto}`,
+            keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
+            privateKey: custom,
+            dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
+          });
+        }
+      }
+      //if the video data is there
+      return { success: true, code: 200, data: videoData };
+    }
+    //if there is no channel
+    return { success: false, data: "", code: 404, error: "No Video found" };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: false, code: 404, error: "Something went wrong , try again later" };
+  }
 };

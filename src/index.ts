@@ -17,9 +17,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Welcome to the media service</h1>");
 });
-// app.use("/Video", VideoRouter);
+app.use("/Video", VideoRouter);
 // app.use("/Channel", );
-// app.use("/Comments", );
+app.use("/Comments", CommentRouter);
 
 const start = async () => {
   const MONGO_URI: any = process.env.MONGO_URI;

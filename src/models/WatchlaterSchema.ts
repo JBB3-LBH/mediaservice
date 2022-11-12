@@ -10,13 +10,15 @@ const watchLaterSchema = new Schema<watchLaterSchemaType>(
     userId: {
       type: Schema.Types.ObjectId,
       required: true,
+      index: true,
     },
     Ref: {
       type: Schema.Types.ObjectId,
       Ref: "video",
-      required: true
+      required: true,
     },
-  }
+  },
+  { timestamps: true }
 );
 
 const Watchlater = model<watchLaterSchemaType>("watchlater", watchLaterSchema);

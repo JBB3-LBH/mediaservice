@@ -57,7 +57,10 @@ export const signedUrl_forScenes = async (ScenesList: TypesforScene[]): Promise<
   const finalArr = [];
   for (let i = 0; i < ScenesList.length; i++) {
     const { videoId, _id } = ScenesList[i];
-    if (videoId.includes("http")) {
+    if (!videoId || !_id) {
+        finalArr.push({ videoId: "", _id });
+      }
+    else if (videoId.includes("http")) {
       finalArr.push({ videoId: "", _id });
     } else {
       //sign with cloudfront

@@ -12,7 +12,7 @@ import {
   get_One_Video,
   likes_N_dislike_for_One_Video,
   views_for_One_Video,
-} from "../services/video";
+} from "../services/Video";
 
 //get videos based on search parameters
 export const video_From_Search = async (req: Request, res: Response) => {

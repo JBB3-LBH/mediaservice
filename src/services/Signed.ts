@@ -58,7 +58,11 @@ export const signedUrl_forScenes = async (ScenesList: TypesforScene[]): Promise<
   for (let i = 0; i < ScenesList.length; i++) {
     const { videoId, _id } = ScenesList[i];
     if (!videoId || !_id) {
-        finalArr.push({ videoId: "", _id });
+        if(!_id){
+            finalArr.push({ videoId: "", _id:"" });
+        }else{
+            finalArr.push({ videoId: "", _id });
+        }
       }
     else if (videoId.includes("http")) {
       finalArr.push({ videoId: "", _id });

@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./db/Mongodb";
 import logg from "./Logs/Customlog";
-import { VideoRouter, ChannelRouter, CommentRouter } from "./Routes";
+import { VideoRouter, ChannelRouter, CommentRouter, SignedRouter } from "./Routes";
 
 dotenv.config();
 const PORT: number | string = process.env.PORT || 9960;
@@ -18,8 +18,9 @@ app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Welcome to the media service</h1>");
 });
 app.use("/Video", VideoRouter);
-// app.use("/Channel", );
+app.use("/Channel", ChannelRouter);
 app.use("/Comments", CommentRouter);
+app.use("/Signed", SignedRouter);
 
 const start = async () => {
   const MONGO_URI: any = process.env.MONGO_URI;

@@ -24,17 +24,6 @@ export const get_One_Video = async (videoId: string) => {
         privateKey: custom!,
         dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
       });
-      for (const scene of videoData.Scenes) {
-        const videoId = scene.videoId;
-        if (videoId) {
-          scene.videoId = getSignedUrl({
-            url: `https://d27i2oedcihbcx.cloudfront.net/${videoId}`,
-            keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-            privateKey: custom!,
-            dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-          });
-        }
-      }
       //if the video data is there
       return { success: true, code: 200, data: videoData };
     }

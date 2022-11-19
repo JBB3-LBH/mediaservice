@@ -23,7 +23,7 @@ export const signOneScene = async (req: Request, res: Response)=>{
     const _id = req.query.sceneId as string;
     try{
     if(!videoId || !_id){
-        return res.status(404).send('provide the proper value for videoId and _id')
+        return res.status(404).send('provide the proper value for path and sceneId')
     }
     if(videoId.includes('http')){
         return res.sendStatus(404)

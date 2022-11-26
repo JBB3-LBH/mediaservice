@@ -1,10 +1,8 @@
 import logg from "../Logs/Customlog";
 import { Like, User, WatchLater, Video, View, Channel } from "../models";
 import { ResultTypes, VideoList2 } from "../types/main";
-import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { ObjectId } from "mongodb";
 import dotenv from "dotenv";
-import { custom } from "./custom";
 import { changeFormatFromRef, toISOStringWithTimezone } from "../utils";
 dotenv.config();
 const DOCUMENT_LIMIT: number = 30;
@@ -18,12 +16,6 @@ export const get_One_Video = async (videoId: string) => {
     //findone
     const videoData = await Video.findOne({ _id: videoId, published: true });
     if (videoData) {
-      videoData.coverPhoto = getSignedUrl({
-        url: `https://d27i2oedcihbcx.cloudfront.net/${videoData.coverPhoto}`,
-        keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-        privateKey: custom!,
-        dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-      });
       //if the video data is there
       return { success: true, code: 200, data: videoData };
     }
@@ -183,24 +175,7 @@ export const Find_Videos = async (searchParam: string, page: number) => {
         },
       },
     ]);
-    for (const video of Videos) {
-      if (video.coverPhoto) {
-        video.coverPhoto = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${video.coverPhoto}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-      if (video.channel.channelPic) {
-        video.channel.channelPic = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${video.channel.channelPic}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-    }
+    
     return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -249,24 +224,7 @@ export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => 
       },
       { $limit: DOCUMENT_LIMIT },
     ]);
-    for (const video of Videos) {
-      if (video.coverPhoto) {
-        video.coverPhoto = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${video.coverPhoto}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-      if (video.channel.channelPic) {
-        video.channel.channelPic = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${video.channel.channelPic}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-    }
+    
     return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -316,24 +274,7 @@ export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promis
       },
       { $limit: DOCUMENT_LIMIT },
     ]);
-    for (const video of Videos) {
-      if (video.coverPhoto) {
-        video.coverPhoto = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${video.coverPhoto}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-      if (video.channel.channelPic) {
-        video.channel.channelPic = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${video.channel.channelPic}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-    }
+    
     return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -390,24 +331,7 @@ export const getAll_SubscriptionBased_Video = async (userId: string, start: stri
           },
         },
       ]);
-      for (const video of Videos) {
-        if (video.coverPhoto) {
-          video.coverPhoto = getSignedUrl({
-            url: `https://d27i2oedcihbcx.cloudfront.net/${video.coverPhoto}`,
-            keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-            privateKey: custom!,
-            dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-          });
-        }
-        if (video.channel.channelPic) {
-          video.channel.channelPic = getSignedUrl({
-            url: `https://d27i2oedcihbcx.cloudfront.net/${video.channel.channelPic}`,
-            keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-            privateKey: custom!,
-            dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-          });
-        }
-      }
+      
       return { success: true, code: 200, data: Videos };
     }
     //if a user wasnt found

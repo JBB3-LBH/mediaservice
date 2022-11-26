@@ -20,7 +20,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/Video", VideoRouter);
 app.use("/Channel", ChannelRouter);
 app.use("/Comments", CommentRouter);
-app.use("/Signed", SignedRouter);
+// app.use("/Signed", SignedRouter);
 
 const start = async () => {
   const MONGO_URI: any = process.env.MONGO_URI;

@@ -1,3 +1,4 @@
+/*
 import { Router } from "express";
 import { signAllScene, signOne, signOneScene } from "../controllers/SignedController";
 
@@ -8,3 +9,4 @@ r.get("/oneScene",signOneScene); //sign a scene
 r.post("/Scenes",signAllScene); //sign scenes
 
 export default r;
+*/

@@ -1,10 +1,8 @@
 import logg from "../Logs/Customlog";
 import { Video, Channel } from "../models";
 import { ResultTypes } from "../types/main";
-import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { ObjectId } from "mongodb";
 import dotenv from "dotenv";
-import { custom } from "./custom";
 dotenv.config();
 
 //function to get channel main data like name and all
@@ -13,22 +11,7 @@ export const One_Channel_Info = async (channelId: string): Promise<ResultTypes> 
     const channelData = await Channel.findOne({ _id: channelId });
     if (channelData) {
       //if the channel is in the db
-      if (channelData.channelPic) {
-        channelData.channelPic = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${channelData.channelPic}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-      if (channelData.channelBanner) {
-        channelData.channelBanner = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${channelData.channelBanner}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
+      
       return { success: true, code: 200, data: channelData };
     }
     //if there is no channel
@@ -62,16 +45,6 @@ export const Find_Channels = async (searchParam: string, page: number) => {
         },
       },
     ]);
-    for (const channel of Channels) {
-      if (channel.channelPic) {
-        channel.channelPic = getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${channel.channelPic}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        });
-      }
-    }
     return { success: true, code: 200, data: Channels };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -133,16 +106,6 @@ export const get_All_Creation = async (channelId: string): Promise<ResultTypes> 
     //findone
     const videoData = await Video.find({ channelId }, "title coverPhoto published");
     if (videoData) {
-      for (const video of videoData) {
-        if (video.coverPhoto) {
-          video.coverPhoto = getSignedUrl({
-            url: `https://d27i2oedcihbcx.cloudfront.net/${video.coverPhoto}`,
-            keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-            privateKey: custom,
-            dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-          });
-        }
-      }
       //if the video data is there
       return { success: true, code: 200, data: videoData };
     }

@@ -1,3 +1,4 @@
+/*
 import { Request, Response } from "express";
 import { signedUrl_forOne, signedUrl_forOneScene, signedUrl_forScenes } from "../services/Signed";
 
@@ -51,3 +52,4 @@ if(!scenesArr){
 
 }
 
+*/

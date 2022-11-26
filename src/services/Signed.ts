@@ -1,3 +1,5 @@
+/*
+
 import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import logg from "../Logs/Customlog";
 import { custom } from "./custom";
@@ -80,3 +82,5 @@ export const signedUrl_forScenes = async (ScenesList: TypesforScene[]): Promise<
     throw new Error(e.message);
   }
 };
+
+*/

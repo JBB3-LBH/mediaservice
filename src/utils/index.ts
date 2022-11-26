@@ -1,7 +1,6 @@
 import logg from "../Logs/Customlog";
 import { Video } from "../models";
-import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
-import { custom } from "../services/custom";
+
 import { RefType, RefType2, VideoList2 } from "../types/main";
 
 export const changeFormatFromRef = (Arr: VideoList2[]): RefType2[] | RefType[] => {
@@ -10,30 +9,20 @@ export const changeFormatFromRef = (Arr: VideoList2[]): RefType2[] | RefType[] =
   for (let i = 0; i < Arr.length; i++) {
     const Ele = Arr[i];
     if(Ele.Ref?.published){
-        const newChannelPic =Ele.Ref.channelId?.channelPic ?  getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${Ele.Ref.channelId!.channelPic}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        }) : "";
-        const newCoverPhoto =Ele.Ref.coverPhoto ?  getSignedUrl({
-          url: `https://d27i2oedcihbcx.cloudfront.net/${Ele.Ref.coverPhoto}`,
-          keyPairId: process.env.CLOUDFRONT_KEY_PAIR_ID!,
-          privateKey: custom!,
-          dateLessThan: `${new Date(Date.now() + 60 * 60 * 24)}`,
-        }) : "";
+        /* sign the media path */
         const {
           _id,
           Views,
+          coverPhoto,
           releaseDate,
-          channelId: { username, _id: id, channelName },
+          channelId: { username, _id: id, channelName,channelPic },
         } = Ele.Ref;
-        const channel = { username, _id: id, channelName, channelPic: newChannelPic };
+        const channel = { username, _id: id, channelName, channelPic };
         const finalObj = {
           _id,
           Views,
           releaseDate,
-          coverPhoto: newCoverPhoto,
+          coverPhoto,
           channel
         };
         newVideoArr.push(finalObj);

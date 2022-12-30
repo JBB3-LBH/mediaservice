@@ -169,7 +169,7 @@ export const getWatchHistoryVideos = async (req: Request<{ userId: string; prevI
 //one video
 export const oneVideo = async (req: Request<{ videoId: string }>, res: Response) => {
   const { videoId } = req.params;
-  if (videoId) {
+  if (!videoId) {
     return res.status(404).json({
       status: 404,
       error: `Provide the proper value for videoId`,
@@ -188,7 +188,7 @@ export const oneVideo = async (req: Request<{ videoId: string }>, res: Response)
 //one video
 export const Likes_nd_Dislikes_oneVideo = async (req: Request<{ videoId: string }>, res: Response) => {
   const { videoId } = req.params;
-  if (videoId) {
+  if (!videoId) {
     return res.status(404).json({
       status: 404,
       error: `Provide the proper value for videoId`,
@@ -207,7 +207,7 @@ export const Likes_nd_Dislikes_oneVideo = async (req: Request<{ videoId: string 
 //one video
 export const Views_oneVideo = async (req: Request<{ videoId: string }>, res: Response) => {
   const { videoId } = req.params;
-  if (videoId) {
+  if (!videoId) {
     return res.status(404).json({
       status: 404,
       error: `Provide the proper value for videoId`,
@@ -226,7 +226,7 @@ export const Views_oneVideo = async (req: Request<{ videoId: string }>, res: Res
 //one video
 export const All_Activity_oneVideo = async (req: Request<{ videoId: string }>, res: Response) => {
   const { videoId } = req.params;
-  if (videoId) {
+  if (!videoId) {
     return res.status(404).json({
       status: 404,
       error: `Provide the proper value for videoId`,

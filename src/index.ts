@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./db/Mongodb";
 import logg from "./Logs/Customlog";
-import { VideoRouter, ChannelRouter, CommentRouter, SignedRouter } from "./Routes";
+import { VideoRouter, ChannelRouter, CommentRouter } from "./Routes";
 
 dotenv.config();
 const PORT: number | string = process.env.PORT || 9960;

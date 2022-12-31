@@ -14,7 +14,7 @@ const DOCUMENT_LIMIT2: number = 50;
 export const get_One_Video = async (videoId: string) => {
   try {
     //findone
-    const videoData = await Video.findOne({ _id: videoId, published: true });
+    const videoData = await Video.findOne({ _id: videoId, published: true }).populate("channelId", { _id: 1, channelPic: 1, channelName: 1,username:1,Subscribers:1 })
     if (videoData) {
       //if the video data is there
       return { success: true, code: 200, data: videoData };

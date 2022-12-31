@@ -48,19 +48,3 @@ const ChannelSchema = new Schema<ChannelSchemaType>({
 });
 
 export default model<ChannelSchemaType>("channel", ChannelSchema);
-
-
-ChannelSchema.post("findOneAndDelete", async (doc: ChannelSchemaType, next: () => void) => {
-  //if the document doesnt exist
-  if (!doc) {
-    return next();
-  }
-
-  //if the document exists
-  try {
-    
-  } catch (e: any) {
-    logg.warn(e.message);
-  }
-  return next();
-});

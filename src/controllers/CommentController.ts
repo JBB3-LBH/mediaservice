@@ -1,4 +1,4 @@
-import { getCommentsTypes, get_All_Comments } from "../services/Comments";
+import { findCommentAmount, getCommentsTypes, get_All_Comments } from "../services/Comments";
 import type { Request, Response } from "express";
 import logg from "../Logs/Customlog";
 //get comments in batch
@@ -26,3 +26,24 @@ export const AllComments = async (req: Request<getCommentsTypes>, res: Response)
     //if its not provided
     return res.status(404).json({ status: 404, error: "Provide the proper value for the property: ( videoRef )" });
   };
+
+  //find total comment for a video
+export const TotalComments = async (req: Request<getCommentsTypes>, res: Response) => {
+  const { videoRef }: { videoRef: string } =  req.params;
+
+  //check if the videoRef is provided
+  if (videoRef) {
+    //take in the videoref id and use it the query the db through the function `findcommentammount`
+    const { success, data, code, error } = await findCommentAmount({ videoRef });
+    try {
+      if (success) {
+        return res.status(code).json({ status: code, data });
+      }
+      return res.status(code).json({ status: code, data: "", error });
+    } catch (error) {
+      logg.warn(`Error while getting total comment`);
+      return res.status(404).json({ status: 404, error: "Something went wrong, try again" });
+    }
+  }
+  return res.status(404).json({ status: 404, error: "Provide the proper value for the following: ( videoRef )" });
+};

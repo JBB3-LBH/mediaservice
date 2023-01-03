@@ -65,3 +65,36 @@ if(comments.length < 1){
     return { success: false, code: 404, error: e.message };
   }
 };
+
+
+//function to count the amount of comments that exists for that video
+export const findCommentAmount = async ({ videoRef }: { videoRef: string }): Promise<ResultTypes> => {
+  try {
+    const count = await Comment.aggregate([
+      {
+        $match: {
+          videoRef: {
+            $eq: new ObjectId(videoRef),
+          },
+        },
+      },
+      {
+        $count: "amount",
+      },
+    ]);
+
+    if (count) {
+      //if everything went well
+      return {
+        success: true,
+        code: 200,
+        data: { amount: count[0] },
+      };
+    }
+    //if videoref didnt exist didnt go well
+    return { success: false, code: 404, error: "This video does not exist" };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: false, code: 404, error: e.message };
+  }
+};

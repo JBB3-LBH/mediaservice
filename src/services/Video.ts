@@ -14,7 +14,13 @@ const DOCUMENT_LIMIT2: number = 50;
 export const get_One_Video = async (videoId: string) => {
   try {
     //findone
-    const videoData = await Video.findOne({ _id: videoId, published: true }).populate("channelId", { _id: 1, channelPic: 1, channelName: 1,username:1,Subscribers:1 })
+    const videoData = await Video.findOne({ _id: videoId, published: true }).populate("channelId", {
+      _id: 1,
+      channelPic: 1,
+      channelName: 1,
+      username: 1,
+      Subscribers: 1,
+    });
     if (videoData) {
       //if the video data is there
       return { success: true, code: 200, data: videoData };
@@ -175,7 +181,7 @@ export const Find_Videos = async (searchParam: string, page: number) => {
         },
       },
     ]);
-    
+
     return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -224,7 +230,7 @@ export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => 
       },
       { $limit: DOCUMENT_LIMIT },
     ]);
-    
+
     return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -274,7 +280,7 @@ export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promis
       },
       { $limit: DOCUMENT_LIMIT },
     ]);
-    
+
     return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
@@ -283,27 +289,26 @@ export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promis
 };
 
 /*<-------------subscription--------------> */
-export const getAll_SubscriptionBased_Video = async (userId: string, start: string, end: string, prev?: string): Promise<ResultTypes> => {
+export const getAll_SubscriptionBased_Video = async (userId: string, prevId?: number): Promise<ResultTypes> => {
   try {
     const channelsList = await User.findById(userId, "Subscription");
     //if the user found
     if (channelsList) {
-      const endDate = end == "0" ? "0" : toISOStringWithTimezone(`${end}`).substring(0, 10);
-      const startDate = end == "0" ? "0" : toISOStringWithTimezone(`${start}`).substring(0, 10);
-      // const today = toISOStringWithTimezone(new Date(Date.now())).substring(0, 10);
       const Videos = await Video.aggregate([
         {
           $match: {
             channelId: { $in: channelsList.Subscription },
-            releaseDate: {
-              $gte: new Date(`${endDate}`),
-              $lte: new Date(`${startDate}`),
-            },
-            type: true,
+            published: false,
           },
         },
         {
           $sort: { releaseDate: -1 },
+        },
+        {
+          $skip: 2 * (prevId || 0),
+        },
+        {
+          $limit: 2,
         },
         {
           $lookup: {
@@ -313,7 +318,7 @@ export const getAll_SubscriptionBased_Video = async (userId: string, start: stri
             as: "channel",
             pipeline: [
               {
-                $project: { _id: 1, channelPic: 1, channelName: 1 },
+                $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
               },
             ],
           },
@@ -328,10 +333,11 @@ export const getAll_SubscriptionBased_Video = async (userId: string, start: stri
             Views: 1,
             releaseDate: 1,
             coverPhoto: 1,
+            description: 1,
           },
         },
       ]);
-      
+
       return { success: true, code: 200, data: Videos };
     }
     //if a user wasnt found
@@ -351,10 +357,10 @@ export const getAll_Videos_Viewed = async (userId: string, start: string, end: s
 
     const queryParams = {
       userId,
-      releaseDate: {
-        $gte: new Date(`${endDate}`),
-        $lte: new Date(`${startDate}`),
-      },
+      // releaseDate: {
+      //   $gte: new Date(`${endDate}`),
+      //   $lte: new Date(`${startDate}`),
+      // },
       ...(prevId && { _id: { $gt: new ObjectId(prevId) } }),
     };
 
@@ -391,7 +397,7 @@ export const getAll_Videos_Viewed = async (userId: string, start: string, end: s
 export const getAll_WatchLater_video = async (userId: string, prevId?: string): Promise<ResultTypes> => {
   try {
     //rfind the liked videos
-    const queryParams = { userId, type: true, ...(prevId && { Ref: { $gt: new ObjectId(prevId) } }) };
+    const queryParams = { userId, ...(prevId && { Ref: { $gt: new ObjectId(prevId) } }) };
     const videos: VideoList2[] = await WatchLater.find(queryParams)
       .select({ Ref: 1 })
       .limit(DOCUMENT_LIMIT)

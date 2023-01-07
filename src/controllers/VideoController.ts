@@ -83,20 +83,17 @@ export const ByGenre = async (req: Request, res: Response) => {
 };
 
 export const getVideosFromSubscriptionList = async (req: Request<{ userId: string; prevId: string }>, res: Response) => {
-  const { userId, prevId } = req.params;
-  const startDate = req.query.startDate as string;
-  const endDate = req.query.endDate as string;
-  if (!userId || !endDate || !startDate) {
+  const { userId } = req.params;
+  const prevId = ~~(req.query.prevId as string) as number;
+  if (!userId) {
     return res.status(404).json({
       status: 404,
-      error: `Provide the proper value for userId, startDate and tartDate`,
+      error: `Provide the proper value for userId`,
     });
   }
 
   try {
-    const start = startDate || "0";
-    const end = endDate || "0";
-    const { success, data, code, message, error } = await getAll_SubscriptionBased_Video(userId, start, end, prevId);
+    const { success, data, code, message, error } = await getAll_SubscriptionBased_Video(userId, prevId);
     if (success) {
       return res.status(code).json({ status: code, data });
     }

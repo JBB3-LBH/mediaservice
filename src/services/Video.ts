@@ -211,7 +211,7 @@ export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => 
           as: "channel",
           pipeline: [
             {
-              $project: { _id: 1, channelPic: 1, channelName: 1 },
+              $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
             },
           ],
         },
@@ -289,7 +289,7 @@ export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promis
 };
 
 /*<-------------subscription--------------> */
-export const getAll_SubscriptionBased_Video = async (userId: string, prevId?: number): Promise<ResultTypes> => {
+export const getAll_SubscriptionBased_Video = async (userId: string, next?: number): Promise<ResultTypes> => {
   try {
     const channelsList = await User.findById(userId, "Subscription");
     //if the user found
@@ -298,17 +298,17 @@ export const getAll_SubscriptionBased_Video = async (userId: string, prevId?: nu
         {
           $match: {
             channelId: { $in: channelsList.Subscription },
-            published: false,
+            published: true,
           },
         },
         {
           $sort: { releaseDate: -1 },
         },
         {
-          $skip: 2 * (prevId || 0),
+          $skip: DOCUMENT_LIMIT * (next || 0),
         },
         {
-          $limit: 2,
+          $limit: DOCUMENT_LIMIT,
         },
         {
           $lookup: {
@@ -350,42 +350,68 @@ export const getAll_SubscriptionBased_Video = async (userId: string, prevId?: nu
 /*<-----------************------------> */
 
 /*<-------------watch history--------------> */
-export const getAll_Videos_Viewed = async (userId: string, start: string, end: string, prevId?: string): Promise<ResultTypes> => {
+export const getAll_Videos_Viewed = async (userId: string, next?: number): Promise<ResultTypes> => {
   try {
-    const endDate = end == "0" ? "0" : toISOStringWithTimezone(`${end}`).substring(0, 10);
-    const startDate = end == "0" ? "0" : toISOStringWithTimezone(`${start}`).substring(0, 10);
-
-    const queryParams = {
-      userId,
-      // releaseDate: {
-      //   $gte: new Date(`${endDate}`),
-      //   $lte: new Date(`${startDate}`),
-      // },
-      ...(prevId && { _id: { $gt: new ObjectId(prevId) } }),
-    };
-
-    const videos: VideoList2[] = await View.find(queryParams)
-      .select({ Ref: 1 })
-      .limit(DOCUMENT_LIMIT)
-      .sort("updatedAt")
-      .populate({
-        path: "Ref",
-        model: Video,
-        select: { Views: 1, Title: 1, key: 1, coverPhoto: 1, releaseDate: 1, publish: 1, channelId: 1 },
-        populate: {
-          path: "channelId",
-          model: Channel,
-          select: { userRef: 0, Subscribers: 0, RegDate: 0 },
+    const Videos: VideoList2[] = await View.aggregate([
+      {
+        $match: {
+          userId: new ObjectId(userId),
         },
-      }); // populate the like videos
+      },
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
+      },
+      {
+        $lookup: {
+          from: "videos",
+          localField: "Ref",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: { Views: 1, title: 1, key: 1, coverPhoto: 1, releaseDate: 1, publish: 1, channelId: 1, published: 1 },
+            },
+            {
+              $lookup: {
+                from: "channels",
+                localField: "channelId",
+                foreignField: "_id",
+                pipeline: [
+                  {
+                    $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
+                  },
+                ],
+                as: "channel",
+              },
+            },
+            { $unwind: "$channel" },
+          ],
+          as: "video",
+        },
+      },
+      { $unwind: "$video" },
+      { $match: { "video.published": true } },
+      { $replaceRoot: { newRoot: { $mergeObjects: ["$video", { historyId: "$_id" }] } } },
+    ]);
 
-    //if the videos is not found
-    if (!videos) return { success: false, data: videos, code: 200 };
-
-    const newVideoArr = changeFormatFromRef(videos);
-
-    return { success: true, data: newVideoArr, code: 200 };
+    return { success: true, data: Videos, code: 200 };
     //if a user wasnt found
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: true, code: 404, data: "", error: e.message };
+  }
+};
+
+export const getOne_Video_History = async (userId: string, videoRef: string) : Promise<ResultTypes> => {
+
+  try {
+	const watchHistoryData = await View.findOne({
+	    userId, Ref: videoRef
+	  })
+	  
+    return { success: true, data: watchHistoryData, code: 200 };
   } catch (e: any) {
     logg.fatal(e.message);
     return { success: true, code: 404, data: "", error: e.message };
@@ -394,31 +420,55 @@ export const getAll_Videos_Viewed = async (userId: string, start: string, end: s
 /*<-----------************------------> */
 
 /*<----------watch later videos-----------------> */
-export const getAll_WatchLater_video = async (userId: string, prevId?: string): Promise<ResultTypes> => {
+export const getAll_WatchLater_video = async (userId: string, next?: number): Promise<ResultTypes> => {
   try {
     //rfind the liked videos
-    const queryParams = { userId, ...(prevId && { Ref: { $gt: new ObjectId(prevId) } }) };
-    const videos: VideoList2[] = await WatchLater.find(queryParams)
-      .select({ Ref: 1 })
-      .limit(DOCUMENT_LIMIT)
-      .sort("updatedAt")
-      .populate({
-        path: "Ref",
-        model: Video,
-        select: { Views: 1, Title: 1, key: 1, coverPhoto: 1, releaseDate: 1, publish: 1, channelId: 1 },
-        populate: {
-          path: "channelId",
-          model: Channel,
-          select: { userRef: 0, Subscribers: 0, RegDate: 0 },
+    const videos: VideoList2[] = await WatchLater.aggregate([
+      {
+        $match: {
+          userId: new ObjectId(userId),
         },
-      }); // populate the like videos
+      },
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
+      },
+      {
+        $lookup: {
+          from: "videos",
+          localField: "Ref",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: { Views: 1, title: 1, key: 1, coverPhoto: 1, releaseDate: 1, publish: 1, channelId: 1, published: 1 },
+            },
+            {
+              $lookup: {
+                from: "channels",
+                localField: "channelId",
+                foreignField: "_id",
+                pipeline: [
+                  {
+                    $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
+                  },
+                ],
+                as: "channel",
+              },
+            },
+            { $unwind: "$channel" },
+          ],
+          as: "video",
+        },
+      },
+      { $unwind: "$video" },
+      { $match: { "video.published": true } },
 
-    //if the videos is not found
-    if (!videos) return { success: false, data: videos, code: 200 };
+      { $replaceRoot: { newRoot: "$video" } },
+    ]); // populate the like videos
 
-    const newVideoArr = changeFormatFromRef(videos);
-
-    return { success: true, data: newVideoArr, code: 200 };
+    return { success: true, data: videos, code: 200 };
   } catch (e: any) {
     //if everything doesn't go well
     logg.fatal(e.message);
@@ -428,21 +478,53 @@ export const getAll_WatchLater_video = async (userId: string, prevId?: string): 
 /*<-----------************------------> */
 
 //<----------liked videos----------------->
-export const getAll_Liked_video = async (userId: string, prevId?: string): Promise<ResultTypes> => {
+export const getAll_Liked_video = async (userId: string, next?: number): Promise<ResultTypes> => {
   try {
-    const queryParams = { userId, type: true, ...(prevId && { Ref: { $gt: new ObjectId(prevId) } }) };
-    const videos: VideoList2[] = await Like.find(queryParams)
-      .select({ Ref: 1 })
-      .limit(DOCUMENT_LIMIT)
-      .sort("updatedAt")
-      .populate({
-        path: "Ref",
-        select: { Views: 1, Title: 1, key: 1, coverPhoto: 1, releaseDate: 1, Publish: 1, channelId: 1 },
-        populate: {
-          path: "channelId",
-          select: { _id: 1, mainPic: 1, channelName: 1, channelPic: 1, username: 1 },
+    const videos: VideoList2[] = await Like.aggregate([
+      {
+        $match: {
+          userId: new ObjectId(userId),
+          type: true,
         },
-      }); // populate the like videos
+      },
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
+      },
+      {
+        $lookup: {
+          from: "videos",
+          localField: "Ref",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: { Views: 1, title: 1, key: 1, coverPhoto: 1, releaseDate: 1, publish: 1, channelId: 1, published: 1 },
+            },
+            {
+              $lookup: {
+                from: "channels",
+                localField: "channelId",
+                foreignField: "_id",
+                pipeline: [
+                  {
+                    $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
+                  },
+                ],
+                as: "channel",
+              },
+            },
+            { $unwind: "$channel" },
+          ],
+          as: "video",
+        },
+      },
+      { $unwind: "$video" },
+      { $match: { "video.published": true } },
+
+      { $replaceRoot: { newRoot: "$video" } },
+    ]);
 
     //if the videos is not found
     if (!videos) return { success: false, data: videos, code: 200 };

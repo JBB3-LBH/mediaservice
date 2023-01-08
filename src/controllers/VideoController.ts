@@ -12,6 +12,7 @@ import {
   get_One_Video,
   likes_N_dislike_for_One_Video,
   views_for_One_Video,
+  getOne_Video_History,
 } from "../services/Video";
 
 //get videos based on search parameters
@@ -84,7 +85,7 @@ export const ByGenre = async (req: Request, res: Response) => {
 
 export const getVideosFromSubscriptionList = async (req: Request<{ userId: string; prevId: string }>, res: Response) => {
   const { userId } = req.params;
-  const prevId = ~~(req.query.prevId as string) as number;
+  const next = ~~(req.query.next as string) as number;
   if (!userId) {
     return res.status(404).json({
       status: 404,
@@ -93,7 +94,7 @@ export const getVideosFromSubscriptionList = async (req: Request<{ userId: strin
   }
 
   try {
-    const { success, data, code, message, error } = await getAll_SubscriptionBased_Video(userId, prevId);
+    const { success, data, code, message, error } = await getAll_SubscriptionBased_Video(userId, next);
     if (success) {
       return res.status(code).json({ status: code, data });
     }
@@ -103,12 +104,14 @@ export const getVideosFromSubscriptionList = async (req: Request<{ userId: strin
   }
 };
 //get liked videos
-export const getLikedVideos = async (req: Request<{ userId: string; prevId: string }>, res: Response) => {
-  const { userId, prevId } = req.params;
+export const getLikedVideos = async (req: Request<{ userId: string }>, res: Response) => {
+  const { userId } = req.params;
+  const next = ~~(req.query.next as string) as number;
+
   if (userId) {
     try {
       // if the last element to paginate with was provided
-      const { success, code, data, error } = await getAll_Liked_video(userId, prevId);
+      const { success, code, data, error } = await getAll_Liked_video(userId, next);
       if (success) return res.status(code).json({ status: code, data });
       //if things didnt go so well
       return res.status(code).json({ status: code, data, error });
@@ -121,12 +124,14 @@ export const getLikedVideos = async (req: Request<{ userId: string; prevId: stri
 };
 
 //get watch later videos
-export const getWatchLaterVideos = async (req: Request<{ userId: string; prevId: string }>, res: Response) => {
-  const { userId, prevId } = req.params;
+export const getWatchLaterVideos = async (req: Request<{ userId: string }>, res: Response) => {
+  const { userId } = req.params;
+  const next = ~~(req.query.next as string) as number;
+
   if (userId) {
     try {
       // if the last element to paginate with was provided
-      const { success, code, data, error } = await getAll_WatchLater_video(userId, prevId);
+      const { success, code, data, error } = await getAll_WatchLater_video(userId, next);
       if (success) return res.status(code).json({ status: code, data });
       //if things didnt go so well
       return res.status(code).json({ status: code, data, error });
@@ -139,11 +144,10 @@ export const getWatchLaterVideos = async (req: Request<{ userId: string; prevId:
 };
 
 //get seen videos
-export const getWatchHistoryVideos = async (req: Request<{ userId: string; prevId: string }>, res: Response) => {
-  const { userId, prevId } = req.params;
-  const startDate = req.query.startDate as string;
-  const endDate = req.query.endDate as string;
-  if (!userId || !endDate || !startDate) {
+export const getWatchHistoryVideos = async (req: Request<{ userId: string }>, res: Response) => {
+  const { userId } = req.params;
+  const next = ~~(req.query.next as string) as number;
+  if (!userId) {
     return res.status(404).json({
       status: 404,
       error: `Provide the proper value for userId, startDate and tartDate`,
@@ -151,10 +155,27 @@ export const getWatchHistoryVideos = async (req: Request<{ userId: string; prevI
   }
 
   try {
-    // if the last element to paginate with was provided
-    const start = startDate || "0";
-    const end = endDate || "0";
-    const { success, code, data, error } = await getAll_Videos_Viewed(userId, start, end, prevId);
+    const { success, code, data, error } = await getAll_Videos_Viewed(userId, next);
+    if (success) return res.status(code).json({ status: code, data });
+    //if things didnt go so well
+    return res.status(code).json({ status: code, data, error });
+  } catch (e: any) {
+    return res.status(404).json({ error: 404, message: `Something went wrong, Try again!` });
+  }
+};
+//get one seen videos
+export const getOneWatchHistoryVideos = async (req: Request<{ userId: string }>, res: Response) => {
+  const { userId } = req.params;
+  const videoId = req.query.videoId as string;
+  if (!userId || !videoId) {
+    return res.status(404).json({
+      status: 404,
+      error: `Provide the proper value for userId and query params of videoId`,
+    });
+  }
+
+  try {
+    const { success, code, data, error } = await getOne_Video_History(userId, videoId);
     if (success) return res.status(code).json({ status: code, data });
     //if things didnt go so well
     return res.status(code).json({ status: code, data, error });
@@ -174,7 +195,7 @@ export const oneVideo = async (req: Request<{ videoId: string }>, res: Response)
   }
   try {
     const { success, data, code, error } = await get_One_Video(videoId);
-  if (success) return res.status(code).json({ status: code, data });
+    if (success) return res.status(code).json({ status: code, data });
     //if things didnt go so well
     return res.status(code).json({ status: code, data, error });
   } catch (e: any) {
@@ -193,7 +214,7 @@ export const Likes_nd_Dislikes_oneVideo = async (req: Request<{ videoId: string 
   }
   try {
     const { success, data, code, error } = await likes_N_dislike_for_One_Video(videoId);
-  if (success) return res.status(code).json({ status: code, data });
+    if (success) return res.status(code).json({ status: code, data });
     //if things didnt go so well
     return res.status(code).json({ status: code, data, error });
   } catch (e: any) {
@@ -212,7 +233,7 @@ export const Views_oneVideo = async (req: Request<{ videoId: string }>, res: Res
   }
   try {
     const { success, data, code, error } = await views_for_One_Video(videoId);
-  if (success) return res.status(code).json({ status: code, data });
+    if (success) return res.status(code).json({ status: code, data });
     //if things didnt go so well
     return res.status(code).json({ status: code, data, error });
   } catch (e: any) {
@@ -231,7 +252,7 @@ export const All_Activity_oneVideo = async (req: Request<{ videoId: string }>, r
   }
   try {
     const { success, data, code, error } = await allActivity_for_One_Video(videoId);
-  if (success) return res.status(code).json({ status: code, data });
+    if (success) return res.status(code).json({ status: code, data });
     //if things didnt go so well
     return res.status(code).json({ status: code, data, error });
   } catch (e: any) {

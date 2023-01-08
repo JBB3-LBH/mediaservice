@@ -15,14 +15,18 @@ export const changeFormatFromRef = (Arr: VideoList2[]): RefType2[] | RefType[] =
           Views,
           coverPhoto,
           releaseDate,
-          channelId: { username, _id: id, channelName,channelPic },
+          published,
+          channelId,
+          title,
         } = Ele.Ref;
-        const channel = { username, _id: id, channelName, channelPic };
+        const channel = channelId
         const finalObj = {
           _id,
           Views,
+          title,
           releaseDate,
           coverPhoto,
+          published,
           channel
         };
         newVideoArr.push(finalObj);

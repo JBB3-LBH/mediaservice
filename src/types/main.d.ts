@@ -36,6 +36,7 @@ export interface RefType {
   channelId: ChannelID;
   releaseDate: Date;
   coverPhoto: string;
+  title?: string;
 }
 export interface RefType2 {
   _id: string;
@@ -43,6 +44,7 @@ export interface RefType2 {
   Views: number;
   channel: ChannelID;
   releaseDate: Date;
+  title?: string;
   coverPhoto: string;
 }
 

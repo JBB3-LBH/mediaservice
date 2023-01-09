@@ -23,8 +23,8 @@ r.get("/:videoId/likes_N_Dislikes", Likes_nd_Dislikes_oneVideo); //get one video
 r.get("/:videoId/views", Views_oneVideo); //get one video views
 
 r.get("/search/autofill", autoComplete);
-r.get("/:userId/trending", trending);
-r.get("/:userId/genre", ByGenre);
+r.get("/trending", trending);
+r.get("/genre", ByGenre);
 r.get("/:userId/history", getWatchHistoryVideos); //watch history
 r.get("/:userId/history/one", getOneWatchHistoryVideos); 
 

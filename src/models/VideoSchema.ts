@@ -2,7 +2,6 @@ import { model, Schema, ObjectId } from "mongoose";
 
 //types for video schema
 export interface VideoType {
-  _id?: ObjectId;
   title: string;
   coverPhoto: string;
   description: string;

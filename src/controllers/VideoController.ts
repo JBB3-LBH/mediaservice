@@ -18,6 +18,7 @@ import {
 //get videos based on search parameters
 export const video_From_Search = async (req: Request, res: Response) => {
   const searchParam = req.query.searchParam as string;
+  const next = req.query.next as string;
   
   if (!searchParam ) {
     return res.status(404).json({
@@ -26,7 +27,7 @@ export const video_From_Search = async (req: Request, res: Response) => {
     });
   }
   try {
-    const { success, data, code, error } = await Find_Videos(searchParam);
+    const { success, data, code, error } = await Find_Videos(searchParam, ~~next);
     if (success) {
       return res.status(code).json({ status: code, data });
     }
@@ -39,7 +40,6 @@ export const video_From_Search = async (req: Request, res: Response) => {
 //autocomplete sugeestion
 export const autoComplete = async (req: Request, res: Response) => {
   const param = req.query.param as string;
-  console.log(param);
   try {
     const searchSuggestion = await Search_Autocomplete(param);
     return res.status(200).json({ data: searchSuggestion, status: 200 });

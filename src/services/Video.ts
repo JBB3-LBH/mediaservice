@@ -161,7 +161,7 @@ export const Search_Autocomplete = async (searchParam: string) => {
 };
 
 //find video from search
-export const Find_Videos = async (searchParam: string) => {
+export const Find_Videos = async (searchParam: string, next: number) => {
   try {
     const Videos = await Video.aggregate([
       {
@@ -181,7 +181,12 @@ export const Find_Videos = async (searchParam: string) => {
       {
         $match: { published: true },
       },
-
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
+      },
       {
         $lookup: {
           from: "channels",

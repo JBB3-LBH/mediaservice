@@ -66,7 +66,7 @@ export const trending = async (req: Request, res: Response) => {
 export const ByGenre = async (req: Request, res: Response) => {
   const Genre = req.query.Genre as string;
   const next = req.query.next as string;
-  if (Genre) {
+  if (!Genre) {
     return res.status(404).json({
       status: 404,
       error: `Provide the proper value for Genre`,

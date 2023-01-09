@@ -131,17 +131,26 @@ export const Search_Autocomplete = async (searchParam: string) => {
     const result = await Video.aggregate([
       {
         $search: {
+          index: "autocomplete",
           autocomplete: {
-            query: `${searchParam}`,
+            query: searchParam,
             path: "title",
-            fuzzy: { maxEdits: 2 },
+            fuzzy: {
+              maxEdits: 1,
+              prefixLength: 1,
+              maxExpansions: 100,
+            },
           },
         },
       },
-      { $limit: 10 },
+      {
+        $limit: 5,
+      },
       {
         $project: {
+          _id: 1,
           title: 1,
+          score: { $meta: "searchScore" },
         },
       },
     ]);
@@ -152,23 +161,41 @@ export const Search_Autocomplete = async (searchParam: string) => {
 };
 
 //find video from search
-export const Find_Videos = async (searchParam: string, page: number) => {
+export const Find_Videos = async (searchParam: string) => {
   try {
     const Videos = await Video.aggregate([
       {
-        $match: { published: true },
-      },
-      {
         $search: {
-          index: "fullsearch",
-          text: {
-            query: `${searchParam}`,
+          index: "autocomplete",
+          autocomplete: {
+            query: searchParam,
             path: "title",
+            fuzzy: {
+              maxEdits: 1,
+              prefixLength: 1,
+              maxExpansions: 100,
+            },
           },
         },
       },
-      { $limit: DOCUMENT_LIMIT },
-      { $skip: (page - 1) * DOCUMENT_LIMIT },
+      {
+        $match: { published: true },
+      },
+
+      {
+        $lookup: {
+          from: "channels",
+          localField: "channelId",
+          foreignField: "_id",
+          as: "channel",
+          pipeline: [
+            {
+              $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
+            },
+          ],
+        },
+      },
+      { $unwind: "$channel" },
       {
         $project: {
           channel: "$channel",
@@ -178,6 +205,7 @@ export const Find_Videos = async (searchParam: string, page: number) => {
           Views: 1,
           releaseDate: 1,
           coverPhoto: 1,
+          score: { $meta: "searchScore" },
         },
       },
     ]);
@@ -190,11 +218,10 @@ export const Find_Videos = async (searchParam: string, page: number) => {
 };
 
 //get videos based on highest views
-export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => {
+export const Trending_Videos = async (next?: number): Promise<ResultTypes> => {
   try {
     const queryParams = {
       published: true,
-      ...(prevId && { _id: { $gt: new ObjectId(prevId) } }),
     };
     const Videos = await Video.aggregate([
       {
@@ -202,6 +229,12 @@ export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => 
       },
       {
         $sort: { Views: -1 },
+      },
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
       },
       {
         $lookup: {
@@ -228,7 +261,6 @@ export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => 
           coverPhoto: 1,
         },
       },
-      { $limit: DOCUMENT_LIMIT },
     ]);
 
     return { success: true, code: 200, data: Videos };
@@ -239,12 +271,11 @@ export const Trending_Videos = async (prevId?: string): Promise<ResultTypes> => 
 };
 
 //get videos based on highest views
-export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promise<ResultTypes> => {
+export const Genre_Based_Videos = async (Genre: number, next?: number): Promise<ResultTypes> => {
   try {
     const queryParams = {
       published: true,
       Genre,
-      ...(prevId && { _id: { $gt: new ObjectId(prevId) } }),
     };
     const Videos = await Video.aggregate([
       {
@@ -252,6 +283,12 @@ export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promis
       },
       {
         $sort: { Views: -1 },
+      },
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
       },
       {
         $lookup: {
@@ -278,7 +315,6 @@ export const Genre_Based_Videos = async (Genre: number, prevId?: string): Promis
           coverPhoto: 1,
         },
       },
-      { $limit: DOCUMENT_LIMIT },
     ]);
 
     return { success: true, code: 200, data: Videos };
@@ -404,13 +440,13 @@ export const getAll_Videos_Viewed = async (userId: string, next?: number): Promi
   }
 };
 
-export const getOne_Video_History = async (userId: string, videoRef: string) : Promise<ResultTypes> => {
-
+export const getOne_Video_History = async (userId: string, videoRef: string): Promise<ResultTypes> => {
   try {
-	const watchHistoryData = await View.findOne({
-	    userId, Ref: videoRef
-	  })
-	  
+    const watchHistoryData = await View.findOne({
+      userId,
+      Ref: videoRef,
+    });
+
     return { success: true, data: watchHistoryData, code: 200 };
   } catch (e: any) {
     logg.fatal(e.message);

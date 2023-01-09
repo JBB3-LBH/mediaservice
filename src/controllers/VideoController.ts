@@ -18,16 +18,15 @@ import {
 //get videos based on search parameters
 export const video_From_Search = async (req: Request, res: Response) => {
   const searchParam = req.query.searchParam as string;
-  const page = req.query.prevId as string;
-  const tempPage = ~~page || 1;
-  if (searchParam || ~~tempPage < 1) {
+  
+  if (!searchParam ) {
     return res.status(404).json({
       status: 404,
-      error: `Provide the proper value for searchParam and page`,
+      error: `Provide the proper value for searchParam`,
     });
   }
   try {
-    const { success, data, code, error } = await Find_Videos(searchParam, tempPage);
+    const { success, data, code, error } = await Find_Videos(searchParam);
     if (success) {
       return res.status(code).json({ status: code, data });
     }
@@ -40,6 +39,7 @@ export const video_From_Search = async (req: Request, res: Response) => {
 //autocomplete sugeestion
 export const autoComplete = async (req: Request, res: Response) => {
   const param = req.query.param as string;
+  console.log(param);
   try {
     const searchSuggestion = await Search_Autocomplete(param);
     return res.status(200).json({ data: searchSuggestion, status: 200 });
@@ -50,9 +50,9 @@ export const autoComplete = async (req: Request, res: Response) => {
 
 //trending videos
 export const trending = async (req: Request, res: Response) => {
-  const prevId = req.query.prevId as string;
+  const next = req.query.next as string;
   try {
-    const { success, data, code, message, error } = await Trending_Videos(prevId);
+    const { success, data, code, message, error } = await Trending_Videos(~~next);
     if (success) {
       return res.status(code).json({ status: code, data, message });
     }
@@ -65,7 +65,7 @@ export const trending = async (req: Request, res: Response) => {
 //videos by genre
 export const ByGenre = async (req: Request, res: Response) => {
   const Genre = req.query.Genre as string;
-  const prevId = req.query.prevId as string;
+  const next = req.query.next as string;
   if (Genre) {
     return res.status(404).json({
       status: 404,
@@ -73,7 +73,7 @@ export const ByGenre = async (req: Request, res: Response) => {
     });
   }
   try {
-    const { success, data, code, message, error } = await Genre_Based_Videos(~~Genre, prevId);
+    const { success, data, code, message, error } = await Genre_Based_Videos(~~Genre, ~~next);
     if (success) {
       return res.status(code).json({ status: code, data, message });
     }

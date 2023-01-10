@@ -11,7 +11,24 @@ export const One_Channel_Info = async (channelId: string): Promise<ResultTypes> 
     const channelData = await Channel.findOne({ _id: channelId });
     if (channelData) {
       //if the channel is in the db
-      
+
+      return { success: true, code: 200, data: channelData };
+    }
+    //if there is no channel
+    return { success: false, data: "", code: 404, error: "No channel found" };
+  } catch (e: any) {
+    logg.fatal(e.message);
+    return { success: false, code: 404, error: "Something went wrong , try again later" };
+  }
+};
+
+export const Find_One_Channel_By_Name = async (username: string): Promise<ResultTypes> => {
+
+  try {
+    const channelData = await Channel.findOne({ username });
+    if (channelData) {
+      //if the channel is in the db
+
       return { success: true, code: 200, data: channelData };
     }
     //if there is no channel
@@ -104,7 +121,7 @@ export const get_Channel_Subscribers = async (channelId: string): Promise<Result
 export const get_All_Creation = async (channelId: string): Promise<ResultTypes> => {
   try {
     //findone
-    const videoData = await Video.find({ channelId }, "title coverPhoto published");
+    const videoData = await Video.find({ channelId, published: true }, "title coverPhoto published");
     if (videoData) {
       //if the video data is there
       return { success: true, code: 200, data: videoData };

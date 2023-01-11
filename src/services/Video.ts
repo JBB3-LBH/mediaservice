@@ -3,7 +3,7 @@ import { Like, User, WatchLater, Video, View, Channel } from "../models";
 import { ResultTypes, VideoList2 } from "../types/main";
 import { ObjectId } from "mongodb";
 import dotenv from "dotenv";
-import { changeFormatFromRef, toISOStringWithTimezone } from "../utils";
+import { toISOStringWithTimezone } from "../utils";
 dotenv.config();
 const DOCUMENT_LIMIT: number = 30;
 const DOCUMENT_LIMIT2: number = 50;
@@ -505,7 +505,6 @@ export const getAll_WatchLater_video = async (userId: string, next?: number): Pr
       },
       { $unwind: "$video" },
       { $match: { "video.published": true } },
-
       { $replaceRoot: { newRoot: "$video" } },
     ]); // populate the like videos
 
@@ -570,8 +569,7 @@ export const getAll_Liked_video = async (userId: string, next?: number): Promise
     //if the videos is not found
     if (!videos) return { success: false, data: videos, code: 200 };
 
-    const newVideoArr = changeFormatFromRef(videos);
-    return { success: true, data: newVideoArr, code: 200 };
+    return { success: true, data: videos, code: 200 };
   } catch (e: any) {
     //if everything doesn't go well
     logg.fatal(e.message);

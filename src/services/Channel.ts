@@ -23,6 +23,7 @@ export const One_Channel_Info = async (channelId: string): Promise<ResultTypes> 
 };
 
 export const Find_One_Channel_By_Name = async (username: string): Promise<ResultTypes> => {
+
   try {
     const channelData = await Channel.findOne({ username });
     if (channelData) {
@@ -53,20 +54,13 @@ export const Find_Channels = async (searchParam: string, page: number) => {
       { $limit: 30 },
       { $skip: (page - 1) * 30 },
       {
-        $lookup: {
-          from: "channels",
-          localField: "channelId",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: { _id: 1, channelPic: 1, channelName: 1, username: 1 },
-            },
-          ],
-          as: "channel",
+        $project: {
+          _id: 1,
+          username: 1,
+          channelName: 1,
+          channelPic: 1,
         },
       },
-      { $unwind: "$channel" },
-      { $replaceRoot: { newRoot: "$channel" } },
     ]);
     return { success: true, code: 200, data: Channels };
   } catch (e: any) {

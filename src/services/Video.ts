@@ -434,7 +434,7 @@ export const getAll_Videos_Viewed = async (userId: string, next?: number): Promi
       },
       { $unwind: "$video" },
       { $match: { "video.published": true } },
-      { $replaceRoot: { newRoot: { $mergeObjects: ["$video", { historyId: "$_id" }] } } },
+      { $replaceRoot: { newRoot: { $mergeObjects: ["$video", { historyId: "$_id", createdAt: "$createdAt",updatedAt: "$updatedAt" }] } } },
     ]);
 
     return { success: true, data: Videos, code: 200 };

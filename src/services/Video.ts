@@ -210,6 +210,7 @@ export const Find_Videos = async (searchParam: string, next: number) => {
           Views: 1,
           releaseDate: 1,
           coverPhoto: 1,
+          description: 1,
           score: { $meta: "searchScore" },
         },
       },

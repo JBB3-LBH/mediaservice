@@ -5,6 +5,8 @@ import { ObjectId } from "mongodb";
 import dotenv from "dotenv";
 dotenv.config();
 
+const DOCUMENT_LIMIT: number = 30;
+
 //function to get channel main data like name and all
 export const One_Channel_Info = async (channelId: string): Promise<ResultTypes> => {
   try {
@@ -38,7 +40,7 @@ export const Find_One_Channel_By_Name = async (username: string): Promise<Result
     return { success: false, code: 404, error: "Something went wrong , try again later" };
   }
 };
-//find video from search
+//find channels from search
 export const Find_Channels = async (searchParam: string, page: number) => {
   try {
     const Channels = await Channel.aggregate([
@@ -118,16 +120,52 @@ export const get_Channel_Subscribers = async (channelId: string): Promise<Result
   }
 };
 
-export const get_All_Creation = async (channelId: string): Promise<ResultTypes> => {
+export const get_All_Creation = async (channelId: string, next?: number): Promise<ResultTypes> => {
   try {
-    //findone
-    const videoData = await Video.find({ channelId, published: true }, "title coverPhoto published");
-    if (videoData) {
-      //if the video data is there
-      return { success: true, code: 200, data: videoData };
-    }
-    //if there is no channel
-    return { success: false, data: "", code: 404, error: "No Video found" };
+    const queryParams = {
+      channelId, published: true
+    };
+    const Videos = await Video.aggregate([
+      {
+        $match: queryParams,
+      },
+      {
+        $sort: { Views: -1 },
+      },
+      {
+        $skip: DOCUMENT_LIMIT * (next || 0),
+      },
+      {
+        $limit: DOCUMENT_LIMIT,
+      },
+      {
+        $lookup: {
+          from: "channels",
+          localField: "channelId",
+          foreignField: "_id",
+          as: "channel",
+          pipeline: [
+            {
+              $project: { _id: 1, channelPic: 1, channelName: 1 },
+            },
+          ],
+        },
+      },
+      { $unwind: "$channel" },
+      {
+        $project: {
+          channel: "$channel",
+          _id: 1,
+          title: 1,
+          published: 1,
+          Views: 1,
+          releaseDate: 1,
+          coverPhoto: 1,
+        },
+      },
+    ]);
+
+    return { success: true, code: 200, data: Videos };
   } catch (e: any) {
     logg.fatal(e.message);
     return { success: false, code: 404, error: "Something went wrong , try again later" };

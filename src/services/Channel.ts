@@ -123,7 +123,8 @@ export const get_Channel_Subscribers = async (channelId: string): Promise<Result
 export const get_All_Creation = async (channelId: string, next?: number): Promise<ResultTypes> => {
   try {
     const queryParams = {
-      channelId, published: true
+      channelId: new ObjectId(channelId),
+       published: true
     };
     const Videos = await Video.aggregate([
       {
